@@ -4,7 +4,7 @@ A React + Django app that gives a truck driver three route options between two p
 forecast along each one at the time the truck will actually be there, scores the weather with the
 risk and load rules from the brief, and recommends a route.
 
-- Live app: _add your Vercel URL here_
+- Live app: https://weather-aware-truck-routing-nu.vercel.app
 - Walkthrough: _add your Loom link here_
 
 ## What it does
