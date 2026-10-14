@@ -93,6 +93,7 @@ HTTP_USER_AGENT = os.environ.get(
     "HTTP_USER_AGENT", "weather-aware-truck-routing/1.0 (take-home demo)"
 )
 VALHALLA_URL = os.environ.get("VALHALLA_URL", "https://valhalla1.openstreetmap.de")
+VALHALLA_MAX_PATH_KM = int(os.environ.get("VALHALLA_MAX_PATH_KM", "1500"))
 OSRM_URL = os.environ.get("OSRM_URL", "https://router.project-osrm.org")
 OPEN_METEO_URL = os.environ.get("OPEN_METEO_URL", "https://api.open-meteo.com/v1/forecast")
 OPEN_METEO_API_KEY = os.environ.get("OPEN_METEO_API_KEY", "")

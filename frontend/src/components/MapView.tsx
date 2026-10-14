@@ -7,10 +7,10 @@ import { positionAt, splitByCheckpoints } from "../lib/path";
 import { riskColor, riskLabel } from "../lib/risk";
 import type { Checkpoint, HeatLayer, Heatmap, Plan, RouteOption, Stop } from "../types";
 
-const TILES = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ' +
-  '&copy; <a href="https://carto.com/attributions">CARTO</a> · Weather: <a href="https://open-meteo.com/">Open-Meteo</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · ' +
+  'Weather: <a href="https://open-meteo.com/">Open-Meteo</a>';
 
 const ALTERNATE_COLOR = "#7b8794";
 const CASING_COLOR = "#1f2933";
@@ -126,7 +126,7 @@ export function MapView(props: Props) {
     });
     map.setView([39.5, -96], 4);
     L.control.zoom({ position: "topright" }).addTo(map);
-    L.tileLayer(TILES, { attribution: ATTRIBUTION, subdomains: "abcd", maxZoom: 18 }).addTo(map);
+    L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
     const heatPane = map.createPane("heat");
     heatPane.style.zIndex = "350";
     heatPane.style.pointerEvents = "none";

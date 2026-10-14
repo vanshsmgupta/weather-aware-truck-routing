@@ -42,6 +42,13 @@ class ValhallaParsingTests(TestCase):
         self.assertEqual(body["costing"], "truck")
         self.assertAlmostEqual(body["costing_options"]["truck"]["weight"], 33.11, places=2)
 
+    def test_trips_beyond_the_server_limit_skip_the_request(self):
+        session = FakeSession(lambda *args: FakeResponse(200, self.response))
+        valhalla = Valhalla("https://valhalla.test", session, max_path_km=100)
+        with self.assertRaises(RoutingError):
+            valhalla.routes(CHICAGO, OMAHA, 73_000)
+        self.assertEqual(session.requests, [])
+
     def test_error_response_raises_routing_error(self):
         error = {"error_code": 442, "error": "No path could be found for input"}
         session = FakeSession(lambda *args: FakeResponse(400, error))

@@ -107,10 +107,11 @@ def spread_time(points, start, end, seconds, out):
 class Valhalla:
     name = "valhalla"
 
-    def __init__(self, base_url, session, timeout=25):
+    def __init__(self, base_url, session, timeout=25, max_path_km=1500):
         self.base_url = base_url.rstrip("/")
         self.session = session
         self.timeout = timeout
+        self.max_path_m = max_path_km * 1000
 
     def routes(self, origin, destination_, gross_lb, alternates=2):
         locations = [self._location(origin), self._location(destination_)]
@@ -130,6 +131,10 @@ class Valhalla:
         return {"lat": round(point[0], 6), "lon": round(point[1], 6)}
 
     def _request(self, locations, gross_lb, alternates):
+        points = [(loc["lat"], loc["lon"]) for loc in locations]
+        span = sum(haversine_m(a, b) for a, b in zip(points, points[1:]))
+        if span > self.max_path_m:
+            raise RoutingError("Trip is longer than the Valhalla server accepts")
         body = {
             "locations": locations,
             "costing": "truck",

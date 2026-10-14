@@ -31,7 +31,10 @@ class CachedRouteFinder:
 
 
 def route_finder():
-    providers = [Valhalla(settings.VALHALLA_URL, http()), Osrm(settings.OSRM_URL, http())]
+    providers = [
+        Valhalla(settings.VALHALLA_URL, http(), max_path_km=settings.VALHALLA_MAX_PATH_KM),
+        Osrm(settings.OSRM_URL, http()),
+    ]
     return CachedRouteFinder(RouteFinder(providers), settings.ROUTE_CACHE_SECONDS)
 
 

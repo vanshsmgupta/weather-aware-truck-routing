@@ -982,6 +982,10 @@ p {
   font-family: var(--font);
 }
 
+.leaflet-tile-pane {
+  filter: grayscale(0.9) brightness(1.04) contrast(0.88);
+}
+
 .heat-layer {
   image-rendering: auto;
 }
