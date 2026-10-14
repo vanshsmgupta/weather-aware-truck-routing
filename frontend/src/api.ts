@@ -55,6 +55,15 @@ export const api = {
     request<Place[]>(`/api/geocode/?q=${encodeURIComponent(query)}`, { signal }),
   plan: (body: PlanRequest, signal?: AbortSignal) =>
     request<Plan>("/api/plans/", { method: "POST", body: JSON.stringify(body), signal }),
-  heatmap: (planId: string, signal?: AbortSignal) =>
-    request<Heatmap>(`/api/plans/${planId}/heatmap/`, { signal }),
+  heatmap: (plan: Plan, signal?: AbortSignal) =>
+    request<Heatmap>("/api/heatmap/", {
+      method: "POST",
+      body: JSON.stringify({
+        corridor: plan.corridor.polyline,
+        length_km: plan.corridor.length_km,
+        departure: plan.departure,
+        load_weight_lb: plan.load_lb,
+      }),
+      signal,
+    }),
 };

@@ -10,10 +10,14 @@ def env_list(name, default=""):
     return [item.strip() for item in os.environ.get(name, default).split(",") if item.strip()]
 
 
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-not-for-production")
-DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
+DEBUG = os.environ.get("DJANGO_DEBUG", "false" if ON_VERCEL else "true").lower() == "true"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+if ON_VERCEL:
+    ALLOWED_HOSTS.append(".vercel.app")
 if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
 
@@ -95,7 +99,6 @@ OPEN_METEO_API_KEY = os.environ.get("OPEN_METEO_API_KEY", "")
 PHOTON_URL = os.environ.get("PHOTON_URL", "https://photon.komoot.io")
 WEATHER_CACHE_SECONDS = int(os.environ.get("WEATHER_CACHE_SECONDS", "1800"))
 ROUTE_CACHE_SECONDS = int(os.environ.get("ROUTE_CACHE_SECONDS", "3600"))
-PLAN_CACHE_SECONDS = int(os.environ.get("PLAN_CACHE_SECONDS", "7200"))
 WEATHER_POINT_BUDGET = int(os.environ.get("WEATHER_POINT_BUDGET", "300"))
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

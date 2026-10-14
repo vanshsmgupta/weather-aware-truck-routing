@@ -60,6 +60,22 @@ def decode_polyline(encoded, precision=6):
     return points
 
 
+def encode_polyline(points, precision=5):
+    factor = 10**precision
+    chunks = []
+    previous = (0, 0)
+    for lat, lon in points:
+        current = (round(lat * factor), round(lon * factor))
+        for delta in (current[0] - previous[0], current[1] - previous[1]):
+            value = ~(delta << 1) if delta < 0 else delta << 1
+            while value >= 0x20:
+                chunks.append(chr((0x20 | (value & 0x1F)) + 63))
+                value >>= 5
+            chunks.append(chr(value + 63))
+        previous = current
+    return "".join(chunks)
+
+
 def cumulative_distance(points):
     total = 0.0
     out = [0.0]

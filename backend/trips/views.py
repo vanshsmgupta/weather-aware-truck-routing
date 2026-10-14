@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import clients
-from .serializers import PlanRequestSerializer
+from .serializers import HeatmapRequestSerializer, PlanRequestSerializer
 from .services.geocoding import GeocodingError
 from .services.heatmap import build_heatmap
 from .services.planner import plan_trip, trip_dict
@@ -68,38 +68,42 @@ class PlanView(APIView):
             log.warning("weather failed: %s", exc)
             return Response({"detail": str(exc)}, status=503)
 
-        corridor = {
-            "samples": trip.corridor(),
-            "length_km": trip.corridor_length_km(),
-            "departure": trip_request.departure,
-            "load_lb": trip_request.load_lb,
-        }
-        cache.set(f"plan:{trip.id}", corridor, settings.PLAN_CACHE_SECONDS)
         return Response(trip_dict(trip))
 
 
-@api_view(["GET"])
-def heatmap(request, plan_id):
-    corridor = cache.get(f"plan:{plan_id}")
-    if corridor is None:
-        return Response({"detail": "This plan has expired. Plan the trip again."}, status=404)
+class HeatmapView(APIView):
+    def post(self, request):
+        serializer = HeatmapRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-    key = f"heatmap:{plan_id}"
-    data = cache.get(key)
-    if data is None:
-        try:
-            data = build_heatmap(
-                corridor["samples"],
-                corridor["length_km"],
-                corridor["departure"],
-                corridor["load_lb"],
-                clients.weather(),
-            )
-        except WeatherError as exc:
-            log.warning("heatmap weather failed: %s", exc)
-            return Response({"detail": str(exc)}, status=503)
-        cache.set(key, data, settings.PLAN_CACHE_SECONDS)
-    return Response(data)
+        key = (
+            "heatmap:"
+            + hashlib.sha1(
+                "|".join(
+                    [
+                        request.data["corridor"],
+                        data["departure"].strftime("%Y%m%d%H"),
+                        str(data["load_weight_lb"]),
+                    ]
+                ).encode()
+            ).hexdigest()
+        )
+        result = cache.get(key)
+        if result is None:
+            try:
+                result = build_heatmap(
+                    data["corridor"],
+                    data["length_km"],
+                    data["departure"],
+                    data["load_weight_lb"],
+                    clients.weather(),
+                )
+            except WeatherError as exc:
+                log.warning("heatmap weather failed: %s", exc)
+                return Response({"detail": str(exc)}, status=503)
+            cache.set(key, result, settings.WEATHER_CACHE_SECONDS)
+        return Response(result)
 
 
 def frontend(request):

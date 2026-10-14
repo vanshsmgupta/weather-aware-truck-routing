@@ -64,7 +64,7 @@ export default function App() {
     setHeatStatus("loading");
     setHeatError(null);
     api
-      .heatmap(plan.id, controller.signal)
+      .heatmap(plan, controller.signal)
       .then((data) => {
         setHeatmap(data);
         setHeatStatus("ready");

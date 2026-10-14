@@ -73,6 +73,7 @@ export interface Plan {
   recommendation: { route: string; headline: string; reasons: string[] };
   warnings: string[];
   routes: RouteOption[];
+  corridor: { polyline: string; length_km: number };
 }
 
 export interface PlanRequest {

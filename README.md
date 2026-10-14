@@ -4,7 +4,7 @@ A React + Django app that gives a truck driver three route options between two p
 forecast along each one at the time the truck will actually be there, scores the weather with the
 risk and load rules from the brief, and recommends a route.
 
-- Live app: _add your Render URL here_
+- Live app: _add your Vercel URL here_
 - Walkthrough: _add your Loom link here_
 
 ## What it does
@@ -141,15 +141,19 @@ The routing tests use a real Valhalla response (Chicago to Milwaukee) saved in
 
 ## Deploying
 
-The repo contains a Dockerfile that builds the frontend and serves it together with the API from one
-gunicorn process, and a `render.yaml` blueprint.
+**Vercel (used for the live app).** `vercel.json` defines two services in one project: the Vite
+frontend from `frontend/` and the Django API from `backend/`, with `/api/*` routed to Django and
+everything else to the frontend. Import the repository in Vercel and deploy; no other settings are
+needed. On Vercel, `DEBUG` is off and `*.vercel.app` is allowed automatically. Set
+`DJANGO_SECRET_KEY` in the project's environment variables.
 
-On Render: New, Blueprint, pick the repository, apply. The service gets a generated
-`DJANGO_SECRET_KEY` and `DJANGO_DEBUG=false`; Render's hostname is added to `ALLOWED_HOSTS`
-automatically. On the free plan the service sleeps when idle, so the first request after a while takes
-about a minute.
+The API keeps no state between requests (the plan response carries the corridor that the heatmap
+request sends back), so it works on serverless functions where each request can land on a
+different instance.
 
-Anywhere else that runs Docker works too; set `DJANGO_ALLOWED_HOSTS` to your domain.
+**Docker / Render.** The Dockerfile builds the frontend and serves it together with the API from
+one gunicorn process, and `render.yaml` is a ready Render blueprint. Anywhere else that runs Docker
+works too; set `DJANGO_ALLOWED_HOSTS` to your domain.
 
 ## API
 
@@ -157,12 +161,12 @@ Anywhere else that runs Docker works too; set `DJANGO_ALLOWED_HOSTS` to your dom
 | --- | --- | --- |
 | GET | `/api/geocode/?q=denver` | Place search (Photon), US-biased |
 | POST | `/api/plans/` | Body: `origin`, `destination` (`{name, lat, lon}`), `departure` (ISO 8601), `load_weight_lb`, `interval_mi` (10, 25, 50), `hos_breaks` |
-| GET | `/api/plans/<id>/heatmap/` | Corridor grid and 49 hourly frames for a plan |
+| POST | `/api/heatmap/` | Body: the plan's `corridor` (`polyline`, `length_km`), `departure`, `load_weight_lb`. Returns the corridor grid and 49 hourly frames |
 | GET | `/api/health/` | Health check |
 
 The plan response contains the three routes in ranked order, each with a simplified path
 (`[lat, lon, mile, seconds after departure]`), checkpoints, stops and risk totals, plus the
-recommendation and any warnings.
+recommendation, any warnings, and the encoded corridor used for the heatmap request.
 
 ## Project layout
 

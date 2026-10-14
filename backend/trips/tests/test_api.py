@@ -59,17 +59,35 @@ class PlanApiTests(SimpleTestCase):
         self.assertTrue(data["routes"][0]["recommended"])
         self.assertEqual(data["load_lb"], 42_000)
 
-    def test_heatmap_is_served_for_a_planned_trip(self):
+    def heatmap(self, body):
+        return self.client.post("/api/heatmap/", body, content_type="application/json")
+
+    def test_heatmap_for_a_planned_trip(self):
         plan = self.post(payload()).json()
-        response = self.client.get(f"/api/plans/{plan['id']}/heatmap/")
+        response = self.heatmap(
+            {
+                "corridor": plan["corridor"]["polyline"],
+                "length_km": plan["corridor"]["length_km"],
+                "departure": plan["departure"],
+                "load_weight_lb": plan["load_lb"],
+            }
+        )
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["frames"], 49)
         self.assertEqual(len(data["layers"]["risk"][0]), len(data["cells"]))
 
-    def test_unknown_plan_has_no_heatmap(self):
-        response = self.client.get(f"/api/plans/{'0' * 32}/heatmap/")
-        self.assertEqual(response.status_code, 404)
+    def test_heatmap_rejects_a_broken_corridor(self):
+        response = self.heatmap(
+            {
+                "corridor": "not a polyline ~~~",
+                "length_km": 100,
+                "departure": (timezone.now() + timedelta(hours=1)).isoformat(),
+                "load_weight_lb": 10_000,
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("corridor", response.json())
 
     def test_invalid_fields_are_reported(self):
         response = self.post(payload(load_weight_lb=-5, interval_mi=15))

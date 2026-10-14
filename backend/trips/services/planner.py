@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from . import hos
-from .geo import METERS_PER_MILE, simplify
+from .geo import METERS_PER_MILE, encode_polyline, simplify
 from .risk import Risk, assess
 
 INTERVALS_MI = (10, 25, 50)
@@ -432,4 +432,8 @@ def trip_dict(trip):
         },
         "warnings": trip.warnings,
         "routes": [route_dict(plan, trip) for plan in trip.routes],
+        "corridor": {
+            "polyline": encode_polyline(trip.corridor()),
+            "length_km": round(trip.corridor_length_km(), 1),
+        },
     }
